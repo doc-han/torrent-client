@@ -3,7 +3,7 @@ defmodule Torrent.Client do
   @api_key Application.get_env(:torrent_client, :api_key)
   @baseUrl "#{@scraperapi_url}api_key=#{@api_key}&autoparse=true"
 
-  def fetch() do
+  def fetch(query) do
     @baseUrl
   end
 end
