@@ -21,7 +21,19 @@ defmodule Torrent.Cli do
         order_by: :string,
         sort_by: :string
       ],
-      aliases: [h: :help]
+      aliases: [
+        h: :help,
+        m: :movies,
+        id: :movie_id,
+        d: :details,
+        l: :limit,
+        p: :page,
+        q: :quality,
+        g: :genre,
+        mr: :minimum_rating,
+        o: :order_by,
+        s: :sort_by
+      ]
     )
     |> args_to_internal_representation()
   end
@@ -64,9 +76,21 @@ defmodule Torrent.Cli do
   def args_to_internal_representation(_), do: :help
 
   def process(:help) do
-    IO.puts(
-      "usage: escript ./torrent-client <keyword | search> [ --(quality, genre, rating | @defualt 'all'), order | @default 'latest', year | @default current, language | @default 'en' ]"
-    )
+    IO.puts("""
+      usage: escript ./torrent_client [options | args]
+    
+      -h  --help            Provides help information for torrent client
+      -m  --movies          Provides markup for client to search for torrent data
+      -id --movie_id        Chooses id to search for movie details. Type integer
+      -d  --details         Provides markup for client to search for movie details
+      -l  --limit           Sets limit for number of search results retrieved
+      -q  --quality         Quality of movies to be queried [720p | 1080p | 2160p | 3D]
+      -p  --page            Provides page number for search query
+      -g  --genre           Genre of movies to be queried
+      -mr --minimum_rating  Provides minimum rating of movies
+      -o  --order_by        Order for search results [desc | asc]
+      -s  --sort_by         Sorting order for search results [title | year | rating | peers | seeds | download_count | like_count | date_added]
+    """)
 
     System.halt(0)
   end

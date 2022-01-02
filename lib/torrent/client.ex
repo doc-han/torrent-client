@@ -17,10 +17,17 @@ defmodule Torrent.Client do
     |> Map.get("data")
     |> Map.get("movies")
     |> Enum.map(fn movie ->
-      Map.take(movie, ["id", "title_long", "rating", "runtime", "summary"])
+      Map.take(movie, ["id", "title_long", "rating", "torrents", "summary"])
     end)
     |> Enum.map(fn movie ->
-      Map.update!(movie, "summary", &(String.slice(&1, 0..50) <> "..."))
+      Map.update!(movie, "summary", &(String.slice(&1, 0..20) <> "..."))
+    end)
+    |> Enum.map(fn movie ->
+      Map.update!(movie, "torrents", fn existing ->
+        Enum.reduce(existing, "", fn torrent, acc ->
+          acc <> torrent["size"] <> " - " <> torrent["hash"] <> " * "
+        end)
+      end)
     end)
   end
 
