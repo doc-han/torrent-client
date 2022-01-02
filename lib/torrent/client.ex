@@ -4,6 +4,7 @@ defmodule Torrent.Client do
   @baseUrl "#{@scraperapi_url}api_key=#{@api_key}&autoparse=true"
   @ytxapi Application.get_env(:torrent_cli, :ytx_url)
   @torrentUrl "https://pirate-bays.net/search?q="
+  @headers Application.get_env(:torrent_cli, :headers)
 
   # https://yts.mx/browse-movies/christmas/1080p/romance/5/latest/2021/en
 
@@ -17,15 +18,12 @@ defmodule Torrent.Client do
     Poison.Parser.parse!(response.body)
     |> Map.get("data")
     |> Map.get("movies")
-    |> Enum.map(fn movie ->
-      Map.take(
-        movie,
-        ["id", "title_long", "rating", "runtime", "summary"]
-      )
-    end)
-    |> IO.inspect(label: :response)
+    |> Enum.map(
+      fn movie ->
+        Map.take(movie, @headers)
+      end
+    )
   end
 
-  def handle_response({:error, _}) do
-  end
+  def handle_response({:error, _}), do: {:error}
 end
