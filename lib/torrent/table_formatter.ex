@@ -1,11 +1,24 @@
 defmodule Torrent.TableFormatter do
-  def print_table_for_columns(rows, headers) do
+  import Enum, only: [each: 2, map: 2, map_join: 3, max: 1]
+  @headers Application.get_env(:torrent_client, :headers)
+  @rows [
+    %{
+      "id" => 14861,
+      "rating" => 0,
+      "runtime" => 100,
+      "summary" =>
+        "A young artist, imprisoned within the trammels of opiulives his phantasmagorical...",
+      "title_long" => "Edgar Allan Poe's Ligeia (2022)"
+    }
+  ]
+
+  def print_table_for_columns(rows \\ @rows, headers \\ @headers) do
     with data_by_columns = split_into_columns(rows, headers),
          column_widths = widths_of(data_by_columns),
          format = format_for(column_widths) do
-      # puts_one_line_in_columns(headers, format)
-      # IO.puts(separator(column_widths))
-      # puts_in_columns(data_by_columns, format)
+      puts_one_line_in_columns(headers, format)
+      IO.puts(separator(column_widths))
+      puts_in_columns(data_by_columns, format)
     end
   end
 
@@ -26,18 +39,18 @@ defmodule Torrent.TableFormatter do
     map_join(column_widths, " | ", fn width -> "~-#{width}s" end) <> "~n"
   end
 
-  # def _separator(column_widths) do
-  #   map_join(column_widths, "-+-", fn width -> List.duplicate("-", width) end)
-  # end
+  def separator(column_widths) do
+    map_join(column_widths, "-+-", fn width -> List.duplicate("-", width) end)
+  end
 
-  # def _puts_in_columns(data_by_columns, format) do
-  #   data_by_columns
-  #   |> List.zip()
-  #   |> map(&Tuple.to_list/1)
-  #   |> each(&puts_one_line_in_columns(&1, format))
-  # end
+  def puts_in_columns(data_by_columns, format) do
+    data_by_columns
+    |> List.zip()
+    |> map(&Tuple.to_list/1)
+    |> each(&puts_one_line_in_columns(&1, format))
+  end
 
-  # def _puts_one_line_in_columns(fields, format) do
-  #   :io.format(format, fields)
-  # end
+  def puts_one_line_in_columns(fields, format) do
+    :io.format(format, fields)
+  end
 end

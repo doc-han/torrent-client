@@ -6,8 +6,6 @@ defmodule Torrent.Client do
   @torrentUrl "https://pirate-bays.net/search?q="
   @headers Application.get_env(:torrent_cli, :headers)
 
-  # https://yts.mx/browse-movies/christmas/1080p/romance/5/latest/2021/en
-
   def fetch(query) do
     query
     |> HTTPoison.get()
@@ -18,11 +16,12 @@ defmodule Torrent.Client do
     Poison.Parser.parse!(response.body)
     |> Map.get("data")
     |> Map.get("movies")
-    |> Enum.map(
-      fn movie ->
-        Map.take(movie, @headers)
-      end
-    )
+    |> Enum.map(fn movie ->
+      Map.take(movie, ["id", "title_long", "rating", "runtime", "summary"])
+    end)
+    |> Enum.map(fn movie ->
+      Map.update!(movie, "summary", &(String.slice(&1, 0..50) <> "..."))
+    end)
   end
 
   def handle_response({:error, _}), do: {:error}
