@@ -11,20 +11,21 @@ defmodule Torrent.Client do
     query
     |> HTTPoison.get()
     |> handle_response()
-    |> IO.inspect()
   end
 
   def handle_response({:ok, response}) do
-    IO.inspect("here")
-    {:ok, document} = Floki.parse_document(response.body)
-    IO.inspect(document, label: :document)
-    Floki.find(document, ".browse-movie-title")
+    Poison.Parser.parse!(response.body)
+    |> Map.get("data")
+    |> Map.get("movies")
+    |> Enum.map(fn movie ->
+      Map.take(
+        movie,
+        ["id", "title_long", "rating", "runtime", "summary"]
+      )
+    end)
+    |> IO.inspect(label: :response)
   end
 
   def handle_response({:error, _}) do
-    IO.inspect("there")
-    {:error, :error}
   end
-
-  # def handle_reponse(other), do: {:error, other}
 end
