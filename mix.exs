@@ -6,6 +6,7 @@ defmodule TorrentClient.MixProject do
       app: :torrent_client,
       version: "0.1.0",
       elixir: "~> 1.12",
+      escript: escript_config(),
       start_permanent: Mix.env() == :prod,
       source: "https://github.com/gerald-annan/torrent-client",
       deps: deps()
@@ -24,6 +25,17 @@ defmodule TorrentClient.MixProject do
     [
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      {:httpoison, "~> 1.8.0"},
+      {:poison, "~> 5.0.0"},
+      {:ex_doc, "~> 0.26.0"},
+      {:earmark, "~> 1.4"},
+      {:floki, "~> 0.32.0"}
+    ]
+  end
+
+  defp escript_config do
+    [
+      main_module: Torrent.Cli
     ]
   end
 end
