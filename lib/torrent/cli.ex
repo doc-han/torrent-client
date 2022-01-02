@@ -1,5 +1,6 @@
 defmodule Torrent.Cli do
   @torrent Application.get_env(:torrent_client, :ytx_api)
+  @headers Application.get_env(:torrent_client, :headers)
 
   # escript ./torrent_client --movie Christmas Tree --genre Comedy
   # https://yts.mx/browse-movies/christmas/1080p/romance/5/latest/2021/en
@@ -87,9 +88,6 @@ defmodule Torrent.Cli do
       end
 
     Torrent.Client.fetch(query)
-    # |> decode_response()
-    # |> sort_into_descending_order()
-    # |> last(count)
-    # |> print_table_for_columns(["number", "created_at", "title"])
+    |> Torrent.TableFormatter.print_table_for_columns(@headers)
   end
 end
