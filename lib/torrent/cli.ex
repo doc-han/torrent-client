@@ -1,7 +1,7 @@
 defmodule Torrent.Cli do
-  @torrent Application.get_env(:torrent_client, :ytx_url)
-  @defyear Date.utc_today().year
+  @torrent Application.get_env(:torrent_client, :ytx_api)
 
+  # escript ./torrent_client --movie Christmas Tree --genre Comedy
   # https://yts.mx/browse-movies/christmas/1080p/romance/5/latest/2021/en
   # https://yts.mx/browse-movies/0/all/all/0/latest/2021/all
 
@@ -9,12 +9,16 @@ defmodule Torrent.Cli do
     OptionParser.parse(args,
       switches: [
         help: :boolean,
+        movies: :boolean,
+        movie_id: :integer,
+        details: :boolean,
+        limit: :integer,
+        page: :integer,
         quality: :string,
         genre: :string,
-        rating: :integer,
-        order: :string,
-        year: :integer,
-        language: :string
+        minimum_rating: :integer,
+        order_by: :string,
+        sort_by: :string
       ],
       aliases: [h: :help]
     )
@@ -34,16 +38,24 @@ defmodule Torrent.Cli do
       [
         Keyword.merge(
           [
+            movies: true,
+            movie_id: 1,
+            details: false,
+            limit: 20,
+            page: 1,
             quality: "all",
             genre: "all",
-            rating: "all",
-            order: "latest",
-            year: @defyear,
-            language: "en"
+            minimum_rating: 0,
+            order_by: "desc",
+            sort_by: "year"
           ],
           parsed
         ),
-        args
+        List.replace_at(
+          [0],
+          0,
+          Enum.join(Enum.map(args, fn arg -> String.split(arg) |> Enum.join("%20") end), "%20")
+        )
       ]
     end
   end
@@ -52,20 +64,29 @@ defmodule Torrent.Cli do
 
   def process(:help) do
     IO.puts(
-      "usage: escript ./torrent-client <keyword | search> [ --(quality, genre, rating | @defualt 'all'), order | @default 'latest', year | @default #{@defyear}, language | @default 'en' ]"
+      "usage: escript ./torrent-client <keyword | search> [ --(quality, genre, rating | @defualt 'all'), order | @default 'latest', year | @default current, language | @default 'en' ]"
     )
 
     System.halt(0)
   end
 
-  def process([params, search]) do
-    # https://yts.mx/browse-movies/christmas/1080p/romance/5/latest/2021/en
-    # https://yts.mx/browse-movies/0/all/all/0/latest/2021/all
-    IO.inspect(
-      '#{@torrent}#{Enum.join(search, "%20")}/#{params[:quality]}/#{params[:genre]}/#{params[:rating]}/#{params[:order]}/#{params[:year]}/#{params[:language]}'
-    )
+  def process([params, [keyword]]) do
+    query =
+      cond do
+        params[:movies] ->
+          term = if keyword == "", do: 0, else: keyword
 
-    # Torrent.Client.fetch(query)
+          @torrent <>
+            "list_movies.json?query_term=#{term}&limit=#{params[:limit]}&page=#{params[:page]}&quality=#{params[:quality]}&minimum_rating=#{params[:minimum_rating]}&order_by=#{params[:order_by]}&sort_by=#{params[:sort_by]}&genre=#{params[:genre]}"
+
+        params[:details] ->
+          @torrent <> "movie_details.json?movie_id#{params[:movie_id]}"
+
+        true ->
+          process([Keyword.merge(params, movies: true), [keyword]])
+      end
+
+    Torrent.Client.fetch(query)
     # |> decode_response()
     # |> sort_into_descending_order()
     # |> last(count)
