@@ -1,18 +1,11 @@
 defmodule Torrent.TableFormatter do
   import Enum, only: [each: 2, map: 2, map_join: 3, max: 1]
   @headers Application.get_env(:torrent_client, :headers)
-  @rows [
-    %{
-      "id" => 14861,
-      "rating" => 0,
-      "runtime" => 100,
-      "summary" =>
-        "A young artist, imprisoned within the trammels of opiulives his phantasmagorical...",
-      "title_long" => "Edgar Allan Poe's Ligeia (2022)"
-    }
-  ]
 
-  def print_table_for_columns(rows \\ @rows, headers \\ @headers) do
+  def print_table_for_columns(response, _, true),
+    do: response |> IO.inspect()
+
+  def print_table_for_columns(rows, headers \\ @headers) do
     with data_by_columns = split_into_columns(rows, headers),
          column_widths = widths_of(data_by_columns),
          format = format_for(column_widths) do

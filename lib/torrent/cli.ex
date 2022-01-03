@@ -12,6 +12,7 @@ defmodule Torrent.Cli do
         help: :boolean,
         movies: :boolean,
         movie_id: :integer,
+        torrents: :boolean,
         details: :boolean,
         limit: :integer,
         page: :integer,
@@ -25,6 +26,7 @@ defmodule Torrent.Cli do
         h: :help,
         m: :movies,
         id: :movie_id,
+        t: :torrents,
         d: :details,
         l: :limit,
         p: :page,
@@ -53,6 +55,7 @@ defmodule Torrent.Cli do
           [
             movies: true,
             movie_id: 1,
+            torrents: true,
             details: false,
             limit: 20,
             page: 1,
@@ -81,6 +84,7 @@ defmodule Torrent.Cli do
     
       -h  --help            Provides help information for torrent client
       -m  --movies          Provides markup for client to search for torrent data
+      -t  --torrents        Retrieves torrent file with movie name for downloads
       -id --movie_id        Chooses id to search for movie details. Type integer
       -d  --details         Provides markup for client to search for movie details
       -l  --limit           Sets limit for number of search results retrieved
@@ -96,22 +100,20 @@ defmodule Torrent.Cli do
   end
 
   def process([params, [keyword]]) do
-    query =
-      cond do
-        params[:movies] ->
-          term = if keyword == "", do: 0, else: keyword
+    cond do
+      params[:movies] ->
+        term = if keyword == "", do: 0, else: keyword
 
-          @torrent <>
-            "list_movies.json?query_term=#{term}&limit=#{params[:limit]}&page=#{params[:page]}&quality=#{params[:quality]}&minimum_rating=#{params[:minimum_rating]}&order_by=#{params[:order_by]}&sort_by=#{params[:sort_by]}&genre=#{params[:genre]}"
+        @torrent <>
+          "list_movies.json?query_term=#{term}&limit=#{params[:limit]}&page=#{params[:page]}&quality=#{params[:quality]}&minimum_rating=#{params[:minimum_rating]}&order_by=#{params[:order_by]}&sort_by=#{params[:sort_by]}&genre=#{params[:genre]}"
 
-        params[:details] ->
-          @torrent <> "movie_details.json?movie_id#{params[:movie_id]}"
+      params[:details] ->
+        @torrent <> "movie_details.json?movie_id#{params[:movie_id]}"
 
-        true ->
-          process([Keyword.merge(params, movies: true), [keyword]])
-      end
-
-    Torrent.Client.fetch(query)
-    |> Torrent.TableFormatter.print_table_for_columns(@headers)
+      true ->
+        process([Keyword.merge(params, movies: true), [keyword]])
+    end
+    |> Torrent.Client.fetch(params[:torrents])
+    |> Torrent.TableFormatter.print_table_for_columns(@headers, params[:torrents])
   end
 end
