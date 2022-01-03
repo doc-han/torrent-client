@@ -10,10 +10,11 @@ defmodule Torrent.Cli do
     OptionParser.parse(args,
       switches: [
         help: :boolean,
-        movies: :boolean,
+        view: :boolean,
+        index: :integer,
+        download: :boolean,
         movie_id: :integer,
         torrents: :boolean,
-        details: :boolean,
         limit: :integer,
         page: :integer,
         quality: :string,
@@ -24,10 +25,10 @@ defmodule Torrent.Cli do
       ],
       aliases: [
         h: :help,
-        m: :movies,
-        id: :movie_id,
+        v: :view,
+        d: :download,
+        i: :movie_id,
         t: :torrents,
-        d: :details,
         l: :limit,
         p: :page,
         q: :quality,
@@ -53,10 +54,6 @@ defmodule Torrent.Cli do
       [
         Keyword.merge(
           [
-            movies: true,
-            movie_id: 1,
-            torrents: true,
-            details: false,
             limit: 20,
             page: 1,
             quality: "all",
@@ -82,11 +79,17 @@ defmodule Torrent.Cli do
     IO.puts("""
       usage: escript ./torrent_client [options | args]
     
+      Example:
+        escript ./torrent_client -v Spider Man -s year -o desc
+        escript ./torrent_client -t Spider Man --limit 3 --genre Action
+        escript ./torrent_client -d Spider Man --movie_id 38423 --index 0
+    
       -h  --help            Provides help information for torrent client
+      -v  --view            Views query results matching specified parameters
       -m  --movies          Provides markup for client to search for torrent data
       -t  --torrents        Retrieves torrent file with movie name for downloads
-      -id --movie_id        Chooses id to search for movie details. Type integer
-      -d  --details         Provides markup for client to search for movie details
+      -i --movie_id        Chooses id to search for movie details. Type integer
+      -d  --downloads       Downloads torrent file for specified movie index
       -l  --limit           Sets limit for number of search results retrieved
       -q  --quality         Quality of movies to be queried [720p | 1080p | 2160p | 3D]
       -p  --page            Provides page number for search query
@@ -100,20 +103,26 @@ defmodule Torrent.Cli do
   end
 
   def process([params, [keyword]]) do
+    IO.inspect(params, label: keyword)
+
+    movie_data =
+      (@torrent <>
+         "list_movies.json?query_term=#{if keyword == "", do: 0, else: keyword}&limit=#{params[:limit]}&page=#{params[:page]}&quality=#{params[:quality]}&minimum_rating=#{params[:minimum_rating]}&order_by=#{params[:order_by]}&sort_by=#{params[:sort_by]}&genre=#{params[:genre]}")
+      |> Torrent.Client.fetch()
+
     cond do
-      params[:movies] ->
-        term = if keyword == "", do: 0, else: keyword
+      params[:torrents] ->
+        Torrent.Client.torrent(movie_data) |> IO.inspect()
 
-        @torrent <>
-          "list_movies.json?query_term=#{term}&limit=#{params[:limit]}&page=#{params[:page]}&quality=#{params[:quality]}&minimum_rating=#{params[:minimum_rating]}&order_by=#{params[:order_by]}&sort_by=#{params[:sort_by]}&genre=#{params[:genre]}"
+      params[:view] ->
+        Torrent.TableFormatter.print_table_for_columns(movie_data, ["id", "title_long", "summary"])
 
-      params[:details] ->
-        @torrent <> "movie_details.json?movie_id#{params[:movie_id]}"
-
-      true ->
-        process([Keyword.merge(params, movies: true), [keyword]])
+      params[:download] ->
+        Torrent.Client.download(
+          Torrent.Client.torrent(movie_data),
+          params[:movie_id],
+          params[:index]
+        )
     end
-    |> Torrent.Client.fetch(params[:torrents])
-    |> Torrent.TableFormatter.print_table_for_columns(@headers, params[:torrents])
   end
 end
