@@ -1,7 +1,7 @@
 defmodule Torrent.Client do
   @moduledoc """
     Provides functions for torrent client service
-  
+
     fetch(query)      Makes a get request using the HTTPoison dependency to retrieves data
     download(movie_data, movie_id, torrent_index)
                       Downloads torrent file according to specified movie id and torrent index
@@ -10,17 +10,17 @@ defmodule Torrent.Client do
                       cleaning up certain options
     view(response)    Structures response data and makes it printable for table display
     torrent(reponse)  Structures response data and retrieves torrents data for json
-  
+
   """
 
   @doc """
     Makes http get request using the HTTPoison dependency to retrieves data and pipes to the handle_response function
-  
+
     This function takes a search query composed together with the yts api url and specified terms and keywords and
     returns parsed results of relevant fields
-  
+
     ## Examples
-  
+
       fetch("https://yts.mx/api/v2/query_term=Spider%20Man")
   """
   def fetch(query) do
@@ -41,7 +41,6 @@ defmodule Torrent.Client do
         movie_id,
         index
       ) do
-    IO.inspect("config")
     hash = Enum.at(torrents, index) |> Map.get("hash")
     # curl - o localname.zip http: //example.com/download/myfile.zip
     System.cmd("curl", [
@@ -75,7 +74,7 @@ defmodule Torrent.Client do
       Map.take(movie, ["id", "title_long", "torrents", "summary"])
     end)
     |> Enum.map(fn movie ->
-      Map.update!(movie, "summary", &(String.slice(&1, 0..50) <> "..."))
+      Map.update!(movie, "summary", &(String.slice(&1, 0..100) <> "..."))
     end)
   end
 
